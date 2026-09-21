@@ -44,6 +44,7 @@ typedef struct {
 } TransportParams;
 
 typedef struct {
+    bool nobuf;
     char *rx_buffer;
     char *tx_buffer;
 } TransportStdio;

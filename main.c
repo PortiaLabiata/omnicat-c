@@ -113,5 +113,10 @@ int main(int argc, char **argv)
         transport_create(&transports[i], &params[i]);
     }
 
+    while (1)
+    {
+        
+    }
+
     return 0;
 }
