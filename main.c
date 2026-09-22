@@ -39,17 +39,17 @@ static int num_transports = 0;
 void config_init_to(const char *to, TransportParams *p)
 {
     const char *ptr = to;
-    char *c = NULL;
+    const char *c = NULL;
     int to_offset = 0;
 
     while ((c = strchr(ptr, ',')))
     {
-        char *end = strchr(c, ',');
+        int len = c - ptr;
         bool valid_key = false;
 
         for (int i = 0; i < num_transports; i++)
         {
-            if (strncmp(c, id_lookup[i], end - c) == 0)
+            if (strncmp(ptr, id_lookup[i], len) == 0)
             {
                 p->to[to_offset] = i;
                 valid_key = true;
@@ -60,7 +60,7 @@ void config_init_to(const char *to, TransportParams *p)
         if (!valid_key)
         {
             char *name = alloca(TRANSP_NAME_MAX);
-            snprintf(name, end - c, "%s", c);
+            snprintf(name, len, "%s", ptr);
 
             printf("Invalid transport destination: %s\n",
                    name);
@@ -83,7 +83,6 @@ void config_init_keys(dictionary *d, const char **keys, int num_keys, TransportP
         if (strcmp(key, "kind") == 0)
         {
             const char *value = iniparser_getstring(d, key_raw, "stdio");
-            printf("Kind: %s\n", value);
             if (value)
             {
                 p[i].label = str2kind(value); 
@@ -131,9 +130,14 @@ void config_init(dictionary *d, TransportParams p[])
                transport_name);
 
         strncpy(id_lookup[i], transport_name, TRANSP_NAME_MAX);
+    }
 
+    for (int i = 0; i < num_transports; i++)
+    {
+        const char *transport_name = iniparser_getsecname(d, i);
         const int num_keys = iniparser_getsecnkeys(d, transport_name);
         const char **keys = alloca(num_keys);
+
         if (!iniparser_getseckeys(d, transport_name, keys))
         {
             fprintf(stderr, "Failed to init transports\n");
@@ -153,7 +157,6 @@ void transport_available_cb(int i)
 
     for (int j = 0; j < t->to_size; j++)
     {
-        printf("%d\n", t->to[j]);
         transport_write(&transports[t->to[j]], (uint8_t*)t->common.rx_buffer, ret);
     }
 }
