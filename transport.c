@@ -1,5 +1,7 @@
 #include <poll.h>
 #include <alloca.h>
+#include <string.h>
+#include <malloc.h>
 
 #include "types.h"
 #include "tstdio.h"
@@ -7,6 +9,10 @@
 int transport_create(Transport *t, TransportParams *p)
 {
     t->common.rxbuf_size = p->options.rxbuf_size;
+    t->common.rx_buffer = malloc(p->options.rxbuf_size);
+
+    memcpy(t->to, p->to, p->to_size);
+    t->to_size = p->to_size;
 
     switch (p->label)
     {
@@ -31,6 +37,7 @@ int transport_do(Transport *t)
 
 void transport_free(Transport *t)
 {
+    free(t->common.rx_buffer);
     switch (t->kind)
     {
         case TRANSP_STDIO:

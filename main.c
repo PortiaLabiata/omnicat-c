@@ -33,6 +33,46 @@ void params_default(TransportParams *p)
     };
 }
 
+static char id_lookup[TRANSP_MAX][TRANSP_NAME_MAX] = {0};
+static int num_transports = 0;
+
+void config_init_to(const char *to, TransportParams *p)
+{
+    const char *ptr = to;
+    char *c = NULL;
+    int to_offset = 0;
+
+    while ((c = strchr(ptr, ',')))
+    {
+        char *end = strchr(c, ',');
+        bool valid_key = false;
+
+        for (int i = 0; i < num_transports; i++)
+        {
+            if (strncmp(c, id_lookup[i], end - c) == 0)
+            {
+                p->to[to_offset] = i;
+                valid_key = true;
+                break;
+            }
+        }
+
+        if (!valid_key)
+        {
+            char *name = alloca(TRANSP_NAME_MAX);
+            snprintf(name, end - c, "%s", c);
+
+            printf("Invalid transport destination: %s\n",
+                   name);
+            exit(1);
+        }
+
+        ptr = c+1;
+        to_offset++;
+    }
+    p->to_size = to_offset;
+}
+
 void config_init_keys(dictionary *d, const char **keys, int num_keys, TransportParams p[])
 {
     for (int i = 0; i < num_keys; i++)
@@ -73,17 +113,24 @@ void config_init_keys(dictionary *d, const char **keys, int num_keys, TransportP
                 p[i].options.rxbuf_size = value;
             }
         }
+
+        if (strcmp(key, "to") == 0)
+        {
+            const char *value = iniparser_getstring(d, key_raw, NULL);
+            config_init_to(value, p); 
+        }
     }
 }
 
 void config_init(dictionary *d, TransportParams p[])
 {
-    const int num_transports = iniparser_getnsec(d);
     for (int i = 0; i < num_transports; i++)
     {
         const char *transport_name = iniparser_getsecname(d, i);
         printf("Found transport %s\n", 
                transport_name);
+
+        strncpy(id_lookup[i], transport_name, TRANSP_NAME_MAX);
 
         const int num_keys = iniparser_getsecnkeys(d, transport_name);
         const char **keys = alloca(num_keys);
@@ -101,7 +148,14 @@ Transport *transports = NULL;
 
 void transport_available_cb(int i)
 {
-    transport_do(&transports[i]);
+    Transport *t = &transports[i];
+    int ret = transport_do(t);
+
+    for (int j = 0; j < t->to_size; j++)
+    {
+        printf("%d\n", t->to[j]);
+        transport_write(&transports[t->to[j]], (uint8_t*)t->common.rx_buffer, ret);
+    }
 }
 
 int main(int argc, char **argv) 
@@ -120,7 +174,7 @@ int main(int argc, char **argv)
     }
 
     printf("Opened config file %s OK\n", argv[1]);
-    const int num_transports = iniparser_getnsec(ini);
+    num_transports = iniparser_getnsec(ini);
 
     TransportParams *params = malloc(num_transports*sizeof(TransportParams));
     for (int i = 0; i < num_transports; i++)

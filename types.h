@@ -5,6 +5,7 @@
 #include <stdint.h>
 #define STR_MAX 4096
 #define TRANSP_MAX 128
+#define TRANSP_NAME_MAX 16
 
 typedef struct {
     char name[STR_MAX];
@@ -43,10 +44,12 @@ typedef struct {
     } address;
     TransportKind label;
     TransportOptions options;
+    unsigned int to[TRANSP_MAX];
+    unsigned int to_size;
 } TransportParams;
 
 typedef struct {
-    char *rx_buffer;
+    int placeholder;
 } TransportStdio;
 
 typedef struct {
@@ -58,6 +61,7 @@ typedef struct {
         int fd;
         int rxbuf_size;
         int tx_pending;
+        char *rx_buffer;
     } common;
     union {
         TransportStdio stdio;
