@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #define STR_MAX 4096
+#define TRANSP_MAX 128
 
 typedef struct {
     char name[STR_MAX];
@@ -32,6 +33,7 @@ typedef enum {
 
 typedef struct {
     bool nobuf;
+    int rxbuf_size;
 } TransportOptions;
 
 typedef struct {
@@ -44,12 +46,19 @@ typedef struct {
 } TransportParams;
 
 typedef struct {
-    bool nobuf;
     char *rx_buffer;
-    char *tx_buffer;
 } TransportStdio;
 
 typedef struct {
+    unsigned int id;
+    unsigned int to[TRANSP_MAX];
+    int to_size;
+
+    struct {
+        int fd;
+        int rxbuf_size;
+        int tx_pending;
+    } common;
     union {
         TransportStdio stdio;
     } value;

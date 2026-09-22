@@ -17,7 +17,6 @@ endif
 LD := $(CC)
 
 SRCS := main.c \
-		args.c \
 		transport.c \
 		tstdio.c 
 OBJS := $(SRCS:.c=.o)

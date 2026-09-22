@@ -4,7 +4,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "args.h"
 #include "dictionary.h"
 #include "types.h"
 #include "transport.h"
@@ -20,6 +19,18 @@ TransportKind str2kind(const char *s)
     }
 
     return TRANSP_SIZE;
+}
+
+void params_default(TransportParams *p)
+{
+    memset(p, 0, sizeof(TransportParams));
+    *p = (TransportParams) {
+        .label = TRANSP_STDIO,
+        .options = {
+            .nobuf = false,
+            .rxbuf_size = 1024,
+        },
+    };
 }
 
 void config_init_keys(dictionary *d, const char **keys, int num_keys, TransportParams p[])
@@ -48,18 +59,18 @@ void config_init_keys(dictionary *d, const char **keys, int num_keys, TransportP
             }
         }
 
-        if (strcmp(key, "nobuf") == 0)
+        if (strcmp(key, "rxbuf") == 0)
         {
-            int value = iniparser_getboolean(d, key_raw, -1);
-            if (value != -1)
+            int value = iniparser_getint(d, key_raw, -1);
+            if (value <= 0)
             {
-                p[i].options.nobuf = value;
-            }
-            else 
-            {
-                fprintf(stderr, "Invalid value of \"%s\": %s\n",
-                        key_raw, iniparser_getstring(d, key_raw, ""));
+                fprintf(stderr, "Failed to parse \"%s\": invalid value",
+                        key_raw);
                 exit(1);
+            }
+            else
+            {
+                p[i].options.rxbuf_size = value;
             }
         }
     }
@@ -86,6 +97,13 @@ void config_init(dictionary *d, TransportParams p[])
     }
 }
 
+Transport *transports = NULL;
+
+void transport_available_cb(int i)
+{
+    transport_do(&transports[i]);
+}
+
 int main(int argc, char **argv) 
 {
     if (argc < 2)
@@ -102,12 +120,17 @@ int main(int argc, char **argv)
     }
 
     printf("Opened config file %s OK\n", argv[1]);
-
     const int num_transports = iniparser_getnsec(ini);
+
     TransportParams *params = malloc(num_transports*sizeof(TransportParams));
+    for (int i = 0; i < num_transports; i++)
+    {
+        params_default(&params[i]);
+    }
+
     config_init(ini, params); 
 
-    Transport *transports = malloc(num_transports*sizeof(Transport));
+    transports = malloc(num_transports*sizeof(Transport));
     for (int i = 0; i < num_transports; i++)
     {
         transport_create(&transports[i], &params[i]);
@@ -115,7 +138,7 @@ int main(int argc, char **argv)
 
     while (1)
     {
-        
+        transport_poll(transports, transport_available_cb, num_transports, 1);        
     }
 
     return 0;
