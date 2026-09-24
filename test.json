@@ -9,6 +9,11 @@
             "name": "t2",
             "kind": "stdio",
             "rxbuf_size": 1500
+        },
+
+        {
+            "name": "t3",
+            "kind": "stdio"
         }
     ]
 }

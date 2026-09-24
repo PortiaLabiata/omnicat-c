@@ -1,11 +1,18 @@
 #include <stdio.h>
 #include <string.h>
+#include <malloc.h>
+
 #include "json.h"
 #include "cJSON/cJSON.h"
 #include "options.h"
 #include "transport.h"
 
-static int json_validate_item(cJSON *j)
+typedef struct {
+    unsigned int i;
+    char *names;
+} ValidationState;
+
+static int json_validate_item(cJSON *j, ValidationState *s)
 {
     cJSON *name = cJSON_GetObjectItemCaseSensitive(j, "name");
     if (!name || !cJSON_IsString(name))
@@ -13,6 +20,27 @@ static int json_validate_item(cJSON *j)
         fprintf(stderr, "Invalid config file: \"name\" is not found or of invalid type\n");
         return -1;
     }
+    
+    const char *name_value = cJSON_GetStringValue(name);
+    if (strlen(name_value) > NAME_SIZE_MAX)
+    {
+        fprintf(stderr, "Failed to create transport %s: name too long\n",
+                name_value);
+        return -1;
+    }
+
+    for (unsigned int i = 0; i < s->i; i++)
+    {
+        if (strcmp(s->names + i*NAME_SIZE_MAX, name_value) == 0)
+        {
+            fprintf(stderr, "Failed to create transport %s: repeating name\n",
+                    name_value);
+            return -1;
+        }
+    }
+
+    strncpy(s->names + s->i++ * NAME_SIZE_MAX, name_value, NAME_SIZE_MAX);
+
     return 0;
 }
 
@@ -26,17 +54,26 @@ int json_validate(cJSON *j)
     }
 
     cJSON *config = NULL;
-    int num_configs = 0;
+    int num_transports = 0;
     cJSON_ArrayForEach(config, configs)
     {
-        if (json_validate_item(config) < 0)
+        num_transports++;
+    }
+
+    ValidationState state = {0};
+    state.names = malloc((NAME_SIZE_MAX+1)*num_transports); 
+
+    int i = 0;
+    cJSON_ArrayForEach(config, configs)
+    {
+        if (json_validate_item(config, &state) < 0)
         {
             fprintf(stderr, "Invalid config\n");
             return -1;
         }
-        num_configs++;
+        i++;
     }
-    return num_configs;
+    return num_transports;
 }
 
 #define streq(a, b) (strcmp(a, b) == 0)
@@ -61,13 +98,7 @@ static int json_create_item(cJSON *j, Transport *t)
         return -1;
     }
 
-    const char *name_value = cJSON_GetStringValue(name);
-    if (strlen(name_value) > NAME_SIZE_MAX)
-    {
-        fprintf(stderr, "Failed to create transport %s: name too long\n",
-                name_value);
-        return -1;
-    }
+    const char *name_value = cJSON_GetStringValue(name); 
     strncpy(t->options.name, name_value, NAME_SIZE_MAX);
 
     cJSON *kind = cJSON_GetObjectItemCaseSensitive(j, "kind");

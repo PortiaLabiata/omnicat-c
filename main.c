@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     cJSON *json = cJSON_Parse(buffer);
     if (!json)
     {
-        fprintf(stderr, "Failed to parse config file: %s\n",
+        fprintf(stderr, "Failed to parse config file at %s\n",
                 cJSON_GetErrorPtr());
         ret = 1;
         goto cleanup;
@@ -94,7 +94,6 @@ int main(int argc, char **argv)
                 {
                     printf("Got data from %s\n", s->t->options.name);
                     int read_bytes = transport_read(s->t, s->t->common.rxbuf, s->t->options.rxbuf_size);
-                    (void)read_bytes;
                 }
             }
         }

@@ -9,7 +9,7 @@ else
 	CFLAGS := -Wall \
 			  -Wextra \
 			  -Wpedantic \
-			  -Og \
+			  -O0 \
 			  -Wno-missing-braces \
 			  -g
 	LDFLAGS := -static 
