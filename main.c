@@ -73,7 +73,14 @@ int main(int argc, char **argv)
     if (json_init(json, transports) < 0)
     {
         ret = 1;
-        goto cleanup;
+        goto cleanup_transports;
+    }
+
+    Transport **id_map = alloca(num_transports*sizeof(Transport*));
+    for (int i = 0; i < num_transports; i++)
+    {
+        Transport *t = &transports[i];
+        id_map[t->common.id] = t;
     }
 
     TransportSelect *selects = alloca(num_transports);
@@ -99,6 +106,8 @@ int main(int argc, char **argv)
         }
     }
 
+cleanup_transports:
+    free(transports);
 cleanup:
     free(buffer);
     return ret;

@@ -63,7 +63,6 @@ int json_validate(cJSON *j)
     ValidationState state = {0};
     state.names = malloc((NAME_SIZE_MAX+1)*num_transports); 
 
-    int i = 0;
     cJSON_ArrayForEach(config, configs)
     {
         if (json_validate_item(config, &state) < 0)
@@ -71,7 +70,6 @@ int json_validate(cJSON *j)
             fprintf(stderr, "Invalid config\n");
             return -1;
         }
-        i++;
     }
     return num_transports;
 }
@@ -119,6 +117,7 @@ static int json_create_item(cJSON *j, Transport *t)
     }
     t->kind = kind_converted;
 
+    int i = 0;
     cJSON *rxbuf_size = cJSON_GetObjectItemCaseSensitive(j, "rxbuf_size");
     if (rxbuf_size)
     {
@@ -131,6 +130,7 @@ static int json_create_item(cJSON *j, Transport *t)
 
         int rxbuf_size_value = cJSON_GetNumberValue(rxbuf_size);
         t->options.rxbuf_size = rxbuf_size_value;
+        t->common.id = i++;
     }
     return 0;
 }
