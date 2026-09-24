@@ -12,13 +12,13 @@ else
 			  -Og \
 			  -Wno-missing-braces \
 			  -g
-	LDFLAGS := -static -Wl,-L=./ -liniparser
+	LDFLAGS := -static 
 endif
 LD := $(CC)
 
 SRCS := main.c \
 		transport.c \
-		tstdio.c 
+		tstdio.c
 OBJS := $(SRCS:.c=.o)
 TARGET := omnicat
 

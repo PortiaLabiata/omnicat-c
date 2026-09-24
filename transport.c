@@ -1,88 +1,86 @@
-#include <poll.h>
-#include <alloca.h>
-#include <string.h>
 #include <malloc.h>
+#include <stdio.h>
+#include <alloca.h>
+#include <unistd.h>
+#include <sys/select.h>
+#include "transport.h"
 
-#include "types.h"
-#include "tstdio.h"
-
-int transport_create(Transport *t, TransportParams *p)
+int transport_init(Transport *t)
 {
-    t->common.rxbuf_size = p->options.rxbuf_size;
-    t->common.rx_buffer = malloc(p->options.rxbuf_size);
-
-    memcpy(t->to, p->to, p->to_size);
-    t->to_size = p->to_size;
-
-    switch (p->label)
+    t->common.rxbuf = malloc(t->options.rxbuf_size);
+    if (!t->common.rxbuf)
     {
-    case TRANSP_STDIO:
-        t->kind = TRANSP_STDIO;
-        return transport_create_stdio(p, t);
-    default:
+        fprintf(stderr, "Failed to allocate buffer for transport %s\n",
+                t->options.name);
         return 1;
     }
-}
 
-int transport_do(Transport *t)
-{
     switch (t->kind)
     {
-        case TRANSP_STDIO:
-            return transport_do_stdio(t);
+        case TRANSPORT_KIND_STDIO:
+            return transport_create_stdio(&t->value.stdio, &t->common, &t->options);
+        case TRANSPORT_KIND_SIZE:
+            fprintf(stderr, "Invalid transport kind %d for transport %s\n",
+                    (int)t->kind, t->options.name);
+            return 1;
         default:
             return 1;
     }
 }
 
-void transport_free(Transport *t)
+void transport_deinit(Transport *t)
 {
-    free(t->common.rx_buffer);
+    free(t->common.rxbuf);
     switch (t->kind)
     {
-        case TRANSP_STDIO:
-            transport_free_stdio(t);
+        case TRANSPORT_KIND_STDIO:
+            transport_deinit_stdio(&t->value.stdio);
+            break;
+        case TRANSPORT_KIND_SIZE:
+            fprintf(stderr, "Invalid transport kind %d for transport %s\n",
+                    (int)t->kind, t->options.name);
+            break;
         default:
             break;
     }
 }
 
-int transport_write(Transport *t, uint8_t *data, int size)
+int transport_read(Transport *t, uint8_t *buf, unsigned int size)
 {
-    switch (t->kind)
-    {
-        case TRANSP_STDIO:
-            return transport_write_stdio(t, data, size);
-        default:
-            return 1;
-    }
+    return read(t->common.fdin, buf, size); 
 }
 
-int transport_poll(Transport t[], void cb(int i), int n, int timeout)
+int transport_write(Transport *t, uint8_t *buf, unsigned int size)
 {
-    struct pollfd *fds = alloca(n*sizeof(struct pollfd)); 
+    return write(t->common.fdout, buf, size); 
+}
+
+int transport_select(TransportSelect *t, int n, int tout_ms)
+{
+    fd_set rfds, wfds, efds;
+
+    FD_ZERO(&rfds);
     for (int i = 0; i < n; i++)
     {
-        fds[i].events = POLLIN;
-        fds[i].fd = t[i].common.fd;
-        fds[i].revents = 0;
+        FD_SET(t[i].t->common.fdin, &rfds);
     }
 
-    int ret = poll(fds, n, timeout);
-    if (ret > 0)
+    FD_ZERO(&wfds);
+    for (int i = 0; i < n; i++)
     {
-        for (int i = 0; i < n; i++)
-        {
-            if (fds[i].revents & POLLIN)
-            {
-                cb(i);
-            }
-        }
-    } 
-    else if (ret == -1)
-    {
-        return -1;
+        FD_SET(t[i].t->common.fdout, &wfds);
     }
-    return 0;
+
+    FD_ZERO(&efds);
+    for (int i = 0; i < n; i++)
+    {
+        FD_SET(t[i].t->common.fdin, &efds);
+    }
+
+    struct timeval dt = {
+        .tv_sec = 0,
+        .tv_usec = tout_ms / 1000,
+    };
+
+    return select(n, &rfds, &wfds, &efds, &dt);
 }
-

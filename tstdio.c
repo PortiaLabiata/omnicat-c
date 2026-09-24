@@ -1,26 +1,14 @@
-#include <malloc.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include "tstdio.h"
 
-int transport_create_stdio(TransportParams *p, Transport *t)
+int transport_create_stdio(TransportStdio *s, TransportCommon *c, Options *o)
 {
-    t->common.fd = 0;
+    (void)s; (void)o;
+    c->fdin = 0;
+    c->fdout = 1;
     return 0;
 }
 
-int transport_do_stdio(Transport *t)
+void transport_deinit_stdio(TransportStdio *s)
 {
-    return read(0, t->common.rx_buffer, t->common.rxbuf_size);
-}
-
-int transport_write_stdio(Transport *t, uint8_t *data, int size)
-{
-    write(1, data, size);
-    return 0;
-}
-
-void transport_free_stdio(Transport *t)
-{
-    (void)t;
+    (void)s;
 }
