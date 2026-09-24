@@ -8,4 +8,6 @@ typedef struct {
     char name[NAME_SIZE_MAX];
 } Options;
 
+int options_set_defaults(Options *o);
+
 #endif

@@ -79,8 +79,29 @@ int transport_select(TransportSelect *t, int n, int tout_ms)
 
     struct timeval dt = {
         .tv_sec = 0,
-        .tv_usec = tout_ms / 1000,
+        .tv_usec = tout_ms * 1000,
     };
 
-    return select(n, &rfds, &wfds, &efds, &dt);
+    int ret = select(n, &rfds, &wfds, &efds, &dt);
+    if (ret > 0)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            if (FD_ISSET(t[i].t->common.fdin, &rfds))
+            {
+                t[i].bitmask |= SELECT_READ;
+            }
+
+            if (FD_ISSET(t[i].t->common.fdout, &wfds))
+            {
+                t[i].bitmask |= SELECT_READ;
+            }
+
+            if (FD_ISSET(t[i].t->common.fdin, &efds))
+            {
+                t[i].bitmask |= SELECT_READ;
+            }
+        }
+    }
+    return ret;
 }

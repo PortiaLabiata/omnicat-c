@@ -1,35 +1,106 @@
 #include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <malloc.h>
+#include <alloca.h>
+
+#include "cJSON/cJSON.h"
 #include "transport.h"
+#include "json.h"
 
 int main(int argc, char **argv)
 {
     (void)argc; (void)argv;
+    int ret = 0;
 
-    Transport t1 = {0};
-    t1.kind = TRANSPORT_KIND_STDIO;
-    t1.options.rxbuf_size = 1024;
+    if (argc < 2)
+    {
+        fprintf(stderr, "Invalid number of arguments: file name required\n");
+        return 1;
+    }
 
-    Transport t2 = {0};
-    t2.kind = TRANSPORT_KIND_STDIO;
-    t2.options.rxbuf_size = 1024;
+    FILE *config_file = fopen(argv[1], "r");
+    if (!config_file)
+    {
+        fprintf(stderr, "Failed to open file %s: %s\n",
+                argv[1], strerror(errno));
+        return 1;
+    }
 
-    transport_init(&t1);
-    transport_init(&t2);
+    fseek(config_file, 0, SEEK_END);
+    unsigned long size = ftell(config_file);
+    fseek(config_file, 0, SEEK_SET);
 
-    TransportSelect s1 = {0};
-    s1.t = &t1;
-    TRANSPORT_SEL_CLEAR(s1);
+    char *buffer = malloc(size);
+    if (!buffer)
+    {
+        fprintf(stderr, "Failed to load file into memory: %s\n",
+                strerror(errno));
+        return 1;
+    }
+
+    if (fread(buffer, 1, size, config_file) != size)
+    {
+        fprintf(stderr, "Failed to read file: %s\n",
+                strerror(errno));
+        return 1;
+    }
+
+    cJSON *json = cJSON_Parse(buffer);
+    if (!json)
+    {
+        fprintf(stderr, "Failed to parse config file: %s\n",
+                cJSON_GetErrorPtr());
+        ret = 1;
+        goto cleanup;
+    }
+
+    int num_transports = json_validate(json);
+    if (num_transports < 0)
+    {
+        ret = 1;
+        goto cleanup;
+    }
+
+    Transport *transports = malloc(num_transports*sizeof(Transport));
+    if (!transports)
+    {
+        fprintf(stderr, "Failed to allocate transports, somehow\n");
+        ret = 1;
+        goto cleanup;
+    }
+
+    if (json_init(json, transports) < 0)
+    {
+        ret = 1;
+        goto cleanup;
+    }
+
+    TransportSelect *selects = alloca(num_transports);
+    for (int i = 0; i < num_transports; i++)
+    {
+        selects[i].t = &transports[i];
+        selects[i].bitmask = 0;
+    }
 
     while (1)
     {
-        int res = transport_select(&s1, 1, 1);
-        if (res > 0)
+        if (transport_select(selects, num_transports, 1) > 0)
         {
-            TRANSPORT_SEL_CLEAR(s1);
-            int ret = transport_read(&t1, t1.common.rxbuf, t1.options.rxbuf_size);
-            transport_write(&t1, t1.common.rxbuf, ret);
+            for (int i = 0; i < num_transports; i++)
+            {
+                TransportSelect *s = &selects[i];
+                if (s->bitmask & SELECT_READ)
+                {
+                    printf("Got data from %s\n", s->t->options.name);
+                    int read_bytes = transport_read(s->t, s->t->common.rxbuf, s->t->options.rxbuf_size);
+                    (void)read_bytes;
+                }
+            }
         }
     }
 
-    return 0;
+cleanup:
+    free(buffer);
+    return ret;
 }

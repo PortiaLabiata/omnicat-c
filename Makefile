@@ -20,7 +20,8 @@ SRCS := main.c \
 		transport.c \
 		tstdio.c \
 		cJSON/cJSON.c \
-		json.c
+		json.c \
+		options.c
 OBJS := $(SRCS:.c=.o)
 TARGET := omnicat
 

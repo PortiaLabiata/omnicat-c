@@ -87,6 +87,20 @@ static int json_create_item(cJSON *j, Transport *t)
         return -1;
     }
     t->kind = kind_converted;
+
+    cJSON *rxbuf_size = cJSON_GetObjectItemCaseSensitive(j, "rxbuf_size");
+    if (rxbuf_size)
+    {
+        if (!cJSON_IsNumber(rxbuf_size))
+        {
+            fprintf(stderr, "Failed to create transport %s: \"rxbuf_size\" has invalid type\n",
+                    name_value);
+            return -1;
+        }
+
+        int rxbuf_size_value = cJSON_GetNumberValue(rxbuf_size);
+        t->options.rxbuf_size = rxbuf_size_value;
+    }
     return 0;
 }
 

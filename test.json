@@ -1,0 +1,14 @@
+{
+    "configs": [
+        {
+            "name": "t1",
+            "kind": "stdio"
+        },
+
+        {
+            "name": "t2",
+            "kind": "stdio",
+            "rxbuf_size": 1500
+        }
+    ]
+}
