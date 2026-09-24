@@ -18,7 +18,9 @@ LD := $(CC)
 
 SRCS := main.c \
 		transport.c \
-		tstdio.c
+		tstdio.c \
+		cJSON/cJSON.c \
+		json.c
 OBJS := $(SRCS:.c=.o)
 TARGET := omnicat
 
