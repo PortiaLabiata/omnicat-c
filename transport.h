@@ -6,6 +6,8 @@
 #include "tstdio.h"
 #include <stdint.h>
 
+#define TRANSPORT_SEL_CLEAR(t) (t.bitmask = 0)
+
 typedef enum {
     TRANSPORT_KIND_STDIO,
     TRANSPORT_KIND_SIZE
