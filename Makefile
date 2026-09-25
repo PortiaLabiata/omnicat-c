@@ -19,6 +19,7 @@ LD := $(CC)
 SRCS := main.c \
 		transport.c \
 		tstdio.c \
+		tudp.h \
 		cJSON/cJSON.c \
 		json.c \
 		options.c

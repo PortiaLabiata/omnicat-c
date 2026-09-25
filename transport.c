@@ -19,6 +19,8 @@ int transport_init(Transport *t)
     {
         case TRANSPORT_KIND_STDIO:
             return transport_create_stdio(&t->value.stdio, &t->common, &t->options);
+        case TRANSPORT_KIND_UDP:
+            return transport_create_udp(&t->value.udp, &t->common, &t->options);
         case TRANSPORT_KIND_SIZE:
             fprintf(stderr, "Invalid transport kind %d for transport %s\n",
                     (int)t->kind, t->options.name);
@@ -35,6 +37,9 @@ void transport_deinit(Transport *t)
     {
         case TRANSPORT_KIND_STDIO:
             transport_deinit_stdio(&t->value.stdio);
+            break;
+        case TRANSPORT_KIND_UDP:
+            transport_deinit_udp(&t->value.udp);
             break;
         case TRANSPORT_KIND_SIZE:
             fprintf(stderr, "Invalid transport kind %d for transport %s\n",
