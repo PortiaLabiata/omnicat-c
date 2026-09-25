@@ -52,12 +52,30 @@ void transport_deinit(Transport *t)
 
 int transport_read(Transport *t, uint8_t *buf, unsigned int size)
 {
-    return read(t->common.fdin, buf, size); 
+    switch (t->kind)
+    {
+    case TRANSPORT_KIND_STDIO:
+    case TRANSPORT_KIND_FILE:
+        return read(t->common.fdin, buf, size); 
+    case TRANSPORT_KIND_UDP:
+        return transport_read_udp(&t->value.udp, &t->common, buf, size);
+    default:
+        return 1;
+    }
 }
 
 int transport_write(Transport *t, uint8_t *buf, unsigned int size)
 {
-    return write(t->common.fdout, buf, size); 
+    switch (t->kind)
+    {
+    case TRANSPORT_KIND_STDIO:
+    case TRANSPORT_KIND_FILE:
+        return write(t->common.fdin, buf, size); 
+    case TRANSPORT_KIND_UDP:
+        return transport_write_udp(&t->value.udp, &t->common, buf, size);
+    default:
+        return 1;
+    }
 }
 
 int transport_select(TransportSelect *t, int n, int tout_ms)

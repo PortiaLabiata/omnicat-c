@@ -14,6 +14,7 @@
 typedef enum {
     TRANSPORT_KIND_STDIO,
     TRANSPORT_KIND_UDP,
+    TRANSPORT_KIND_FILE,
     TRANSPORT_KIND_SIZE
 } TransportKind;
 

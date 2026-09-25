@@ -3,13 +3,13 @@
 #include <string.h>
 
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 
 #include "tudp.h"
 
 int transport_create_udp(TransportUDP *s, TransportCommon *c, Options *o)
 {
+    (void)s;
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0)
     {
@@ -46,4 +46,21 @@ int transport_create_udp(TransportUDP *s, TransportCommon *c, Options *o)
                 strerror(errno));
         return 1;
     }
+    return 0;
+}
+
+int transport_read_udp(TransportUDP *s, TransportCommon *c, uint8_t *buf, unsigned int size)
+{
+    s->addr_len = sizeof(s->peer_addr);
+    return recvfrom(c->fdin, buf, size, 0, (struct sockaddr*)&s->peer_addr, &s->addr_len);
+}
+
+int transport_write_udp(TransportUDP *s, TransportCommon *c, uint8_t *buf, unsigned int size)
+{
+    return sendto(c->fdout, buf, size, 0, (struct sockaddr*)&s->peer_addr, s->addr_len);
+}
+
+void transport_deinit_udp(TransportUDP *s)
+{
+    (void)s;
 }

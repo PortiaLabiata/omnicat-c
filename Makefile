@@ -9,9 +9,8 @@ else
 	CFLAGS := -Wall \
 			  -Wextra \
 			  -Wpedantic \
-			  -O0 \
-			  -Wno-missing-braces \
-			  -g
+			  -Og \
+			  -Wno-missing-braces
 	LDFLAGS := -static 
 endif
 LD := $(CC)
@@ -19,7 +18,7 @@ LD := $(CC)
 SRCS := main.c \
 		transport.c \
 		tstdio.c \
-		tudp.h \
+		tudp.c \
 		cJSON/cJSON.c \
 		json.c \
 		options.c
