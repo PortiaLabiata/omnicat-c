@@ -85,6 +85,12 @@ int main(int argc, char **argv)
 
     for (int i = 0; i < num_transports; i++)
     {
+        transport_init(&transports[i]);
+    }
+
+    /*
+    for (int i = 0; i < num_transports; i++)
+    {
         Transport *t = &transports[i];
         printf("%s=%d: ", t->options.name,
                t->common.id);
@@ -94,15 +100,16 @@ int main(int argc, char **argv)
         }
         puts("");
     }
+    */
 
-    Transport **id_map = alloca(num_transports*sizeof(Transport*));
+    Transport **id_map = malloc(num_transports*sizeof(Transport*));
     for (int i = 0; i < num_transports; i++)
     {
         Transport *t = &transports[i];
         id_map[t->common.id] = t;
     }
 
-    TransportSelect *selects = alloca(num_transports);
+    TransportSelect *selects = malloc(num_transports);
     for (int i = 0; i < num_transports; i++)
     {
         selects[i].t = &transports[i];
