@@ -128,7 +128,7 @@ static int json_create_item(cJSON *j, Transport *t)
     return 0;
 }
 
-static int json_init_id_item(JSONState *s, cJSON *j, Transport *ts)
+static int json_init_id_item(JSONState *s, cJSON *j, Transport *t)
 {
     cJSON *to = cJSON_GetObjectItemCaseSensitive(j, "to");
     if (!to || !cJSON_IsArray(to))
@@ -137,6 +137,7 @@ static int json_init_id_item(JSONState *s, cJSON *j, Transport *ts)
         return -1;
     }
 
+    int i = 0;
     cJSON *to_entry = NULL;
     cJSON_ArrayForEach(to_entry, to)
     {
@@ -154,6 +155,7 @@ static int json_init_id_item(JSONState *s, cJSON *j, Transport *ts)
             if (strncmp(to_entry_value, s->names + NAME_SIZE_MAX*j, NAME_SIZE_MAX) == 0)
             {
                 valid_name = true;
+                t->common.to[i] = j;
                 break;
             }
         }
@@ -164,7 +166,9 @@ static int json_init_id_item(JSONState *s, cJSON *j, Transport *ts)
                     to_entry_value);
             return -1;
         }
+        i++;
     }
+    t->common.to_size = i;
     return 0;
 }
 

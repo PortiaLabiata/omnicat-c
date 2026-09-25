@@ -5,6 +5,7 @@
 #include <alloca.h>
 
 #include "cJSON/cJSON.h"
+#include "options.h"
 #include "transport.h"
 #include "json.h"
 
@@ -71,10 +72,27 @@ int main(int argc, char **argv)
         goto cleanup;
     }
 
+    for (int i = 0; i < num_transports; i++)
+    {
+        options_set_defaults(&transports[i].options);
+    }
+
     if (json_init(&json_state, json, transports) < 0)
     {
         ret = 1;
         goto cleanup_transports;
+    }
+
+    for (int i = 0; i < num_transports; i++)
+    {
+        Transport *t = &transports[i];
+        printf("%s=%d: ", t->options.name,
+               t->common.id);
+        for (unsigned int j = 0; j < t->common.to_size; j++)
+        {
+            printf("%d ", t->common.to[j]);
+        }
+        puts("");
     }
 
     Transport **id_map = alloca(num_transports*sizeof(Transport*));
@@ -100,8 +118,23 @@ int main(int argc, char **argv)
                 TransportSelect *s = &selects[i];
                 if (s->bitmask & SELECT_READ)
                 {
-                    printf("Got data from %s\n", s->t->options.name);
-                    int read_bytes = transport_read(s->t, s->t->common.rxbuf, s->t->options.rxbuf_size);
+                    Transport *t = s->t;
+
+                    int read_bytes = transport_read(t, t->common.rxbuf, t->options.rxbuf_size);
+                    if (read_bytes == 0)
+                    {
+                        continue;
+                    }
+                    else if (read_bytes < 0)
+                    {
+                        printf("Error reading transport \"%s\": %s\n",
+                               t->options.name, strerror(errno));
+                    }
+
+                    for (unsigned int j = 0; j < t->common.to_size; j++)
+                    {
+                        transport_write(id_map[t->common.to[j]], t->common.rxbuf, read_bytes);
+                    }
                 }
             }
         }

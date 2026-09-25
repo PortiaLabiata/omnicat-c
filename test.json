@@ -3,7 +3,7 @@
         {
             "name": "t1",
             "kind": "stdio",
-            "to": ["error"]
+            "to": ["t2"]
         },
 
         {
