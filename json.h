@@ -4,7 +4,12 @@
 #include "cJSON/cJSON.h"
 #include "transport.h"
 
-int json_validate(cJSON *j);
-int json_init(cJSON *j, Transport *ts);
+typedef struct {
+    unsigned int i;
+    char *names;
+} JSONState;
+
+int json_validate(JSONState *s, cJSON *j);
+int json_init(JSONState *s, cJSON *j, Transport *ts);
 
 #endif

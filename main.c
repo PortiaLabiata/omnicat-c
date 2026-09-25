@@ -55,7 +55,8 @@ int main(int argc, char **argv)
         goto cleanup;
     }
 
-    int num_transports = json_validate(json);
+    JSONState json_state = {0};
+    int num_transports = json_validate(&json_state, json);
     if (num_transports < 0)
     {
         ret = 1;
@@ -70,7 +71,7 @@ int main(int argc, char **argv)
         goto cleanup;
     }
 
-    if (json_init(json, transports) < 0)
+    if (json_init(&json_state, json, transports) < 0)
     {
         ret = 1;
         goto cleanup_transports;

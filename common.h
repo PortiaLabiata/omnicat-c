@@ -10,6 +10,7 @@ typedef struct {
     uint8_t *rxbuf;
     unsigned int id;
     unsigned int to[TO_MAX];
+    unsigned int to_size;
 } TransportCommon;
 
 #endif

@@ -2,18 +2,21 @@
     "configs": [
         {
             "name": "t1",
-            "kind": "stdio"
+            "kind": "stdio",
+            "to": ["error"]
         },
 
         {
             "name": "t2",
             "kind": "stdio",
-            "rxbuf_size": 1500
+            "rxbuf_size": 1500,
+            "to": []
         },
 
         {
             "name": "t3",
-            "kind": "stdio"
+            "kind": "stdio",
+            "to": []
         }
     ]
 }

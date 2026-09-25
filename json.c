@@ -1,18 +1,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
+#include <stdbool.h>
 
 #include "json.h"
 #include "cJSON/cJSON.h"
 #include "options.h"
 #include "transport.h"
 
-typedef struct {
-    unsigned int i;
-    char *names;
-} ValidationState;
-
-static int json_validate_item(cJSON *j, ValidationState *s)
+static int json_validate_item(cJSON *j, JSONState *s)
 {
     cJSON *name = cJSON_GetObjectItemCaseSensitive(j, "name");
     if (!name || !cJSON_IsString(name))
@@ -44,7 +40,7 @@ static int json_validate_item(cJSON *j, ValidationState *s)
     return 0;
 }
 
-int json_validate(cJSON *j)
+int json_validate(JSONState *s, cJSON *j)
 {
     const cJSON *configs = cJSON_GetObjectItemCaseSensitive(j, "configs");
     if (!configs || !cJSON_IsArray(configs))
@@ -60,12 +56,11 @@ int json_validate(cJSON *j)
         num_transports++;
     }
 
-    ValidationState state = {0};
-    state.names = malloc((NAME_SIZE_MAX+1)*num_transports); 
+    s->names = malloc((NAME_SIZE_MAX+1)*num_transports); 
 
     cJSON_ArrayForEach(config, configs)
     {
-        if (json_validate_item(config, &state) < 0)
+        if (json_validate_item(config, s) < 0)
         {
             fprintf(stderr, "Invalid config\n");
             return -1;
@@ -117,7 +112,6 @@ static int json_create_item(cJSON *j, Transport *t)
     }
     t->kind = kind_converted;
 
-    int i = 0;
     cJSON *rxbuf_size = cJSON_GetObjectItemCaseSensitive(j, "rxbuf_size");
     if (rxbuf_size)
     {
@@ -130,12 +124,51 @@ static int json_create_item(cJSON *j, Transport *t)
 
         int rxbuf_size_value = cJSON_GetNumberValue(rxbuf_size);
         t->options.rxbuf_size = rxbuf_size_value;
-        t->common.id = i++;
     }
     return 0;
 }
 
-int json_init(cJSON *j, Transport *ts)
+static int json_init_id_item(JSONState *s, cJSON *j, Transport *ts)
+{
+    cJSON *to = cJSON_GetObjectItemCaseSensitive(j, "to");
+    if (!to || !cJSON_IsArray(to))
+    {
+        fprintf(stderr, "Failed to create transports: \"to\" not found or of invalid type\n");
+        return -1;
+    }
+
+    cJSON *to_entry = NULL;
+    cJSON_ArrayForEach(to_entry, to)
+    {
+        if (!cJSON_IsString(to_entry))
+        {
+            fprintf(stderr, "Failed to create transports: invalid type in destination list\n");
+            return -1;
+        }
+
+        const char *to_entry_value = cJSON_GetStringValue(to_entry);
+
+        bool valid_name = false;
+        for (unsigned int j = 0; j < s->i; j++)
+        {
+            if (strncmp(to_entry_value, s->names + NAME_SIZE_MAX*j, NAME_SIZE_MAX) == 0)
+            {
+                valid_name = true;
+                break;
+            }
+        }
+
+        if (!valid_name)
+        {
+            fprintf(stderr, "Failed to create transports: invalid destination \"%s\"\n",
+                    to_entry_value);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int json_init(JSONState *s, cJSON *j, Transport *ts)
 {
     const cJSON *configs = cJSON_GetObjectItemCaseSensitive(j, "configs");
 
@@ -144,6 +177,18 @@ int json_init(cJSON *j, Transport *ts)
     cJSON_ArrayForEach(config, configs)
     {
         if (json_create_item(config, &ts[i]) < 0)
+        {
+            fprintf(stderr, "Failed to create transports\n");
+            return -1;
+        }
+        ts[i].common.id = i;
+        i++;
+    }
+
+    i = 0;
+    cJSON_ArrayForEach(config, configs)
+    {
+        if (json_init_id_item(s, config, &ts[i]) < 0)
         {
             fprintf(stderr, "Failed to create transports\n");
             return -1;
