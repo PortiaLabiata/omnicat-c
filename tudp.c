@@ -29,12 +29,6 @@ int transport_create_udp(TransportUDP *s, TransportCommon *c, Options *o)
     {
         addr.sin_port = htons(o->port);
         s->connected = false;
-        if (inet_pton(AF_INET, "0.0.0.0", &addr.sin_addr) != 1)
-        {
-            fprintf(stderr, "Failed to parse socket address %s\n",
-                    o->addr);
-            return -1;
-        }
     }
     else
     {
@@ -42,7 +36,7 @@ int transport_create_udp(TransportUDP *s, TransportCommon *c, Options *o)
         s->peer_addr.sin_port = htons(o->port);
         s->peer_addr.sin_family = AF_INET;
         s->connected = true;
-        if (inet_pton(AF_INET, o->addr, &addr.sin_addr) != 1)
+        if (inet_pton(AF_INET, o->addr, &s->peer_addr.sin_addr) != 1)
         {
             fprintf(stderr, "Failed to parse hardcoded address, somehow\n");
             return -1;
@@ -70,7 +64,7 @@ int transport_read_udp(TransportUDP *s, TransportCommon *c, uint8_t *buf, unsign
 int transport_write_udp(TransportUDP *s, TransportCommon *c, uint8_t *buf, unsigned int size)
 {
     if (s->connected)
-        return sendto(c->fdout, buf, size, 0, (struct sockaddr*)&s->peer_addr, s->addr_len);
+        return sendto(c->fdout, buf, size, 0, (struct sockaddr*)&s->peer_addr, sizeof(s->peer_addr));
     else
         return 0;
 }
