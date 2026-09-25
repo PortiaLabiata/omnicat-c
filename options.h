@@ -12,6 +12,9 @@ typedef struct {
     unsigned int port;
     char name[NAME_SIZE_MAX];
     char addr[ADDR_SIZE_MAX];
+    bool reuseaddr;
+    int so_rcvbuf;
+    int so_sndbuf;
 } Options;
 
 int options_set_defaults(Options *o);

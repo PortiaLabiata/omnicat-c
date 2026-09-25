@@ -1,3 +1,4 @@
+#include <asm-generic/socket.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -48,6 +49,34 @@ int transport_create_udp(TransportUDP *s, TransportCommon *c, Options *o)
         fprintf(stderr, "Failed to bind socket: %s\n",
                 strerror(errno));
         return -1;
+    }
+
+    if (o->reuseaddr)
+    {
+        int opt = 1;
+        if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+        {
+            fprintf(stderr, "Failed to set SO_REUSEADDR\n");
+            return -1;
+        }
+    }
+
+    if (o->so_rcvbuf > 0)
+    {
+        if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &o->so_rcvbuf, sizeof(o->so_rcvbuf)) < 0)
+        {
+            fprintf(stderr, "Failed to set SO_RCVBUF\n");
+            return -1;
+        }
+    }
+
+    if (o->so_sndbuf > 0)
+    {
+        if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &o->so_sndbuf, sizeof(o->so_sndbuf)) < 0)
+        {
+            fprintf(stderr, "Failed to set SO_SNDBUF\n");
+            return -1;
+        }
     }
     return 0;
 }

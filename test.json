@@ -2,8 +2,12 @@
     "configs": [
         {
             "name": "t1",
-            "kind": "stdio",
-            "to": ["t2"]
+            "kind": "udp",
+            "port": 25001,
+            "addr": "127.0.0.1",
+            "reuseaddr": true,
+            "server": false,
+            "to": []
         },
 
         {
@@ -11,6 +15,8 @@
             "kind": "udp",
             "port": 25000,
             "server": true,
+            "rxbuf_size": 3000,
+            "reuseaddr": true,
             "to": ["t1"]
         }
     ]

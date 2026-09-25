@@ -32,6 +32,8 @@ int transport_init(Transport *t)
 
 void transport_deinit(Transport *t)
 {
+    close(t->common.fdin);
+    close(t->common.fdout);
     free(t->common.rxbuf);
     switch (t->kind)
     {

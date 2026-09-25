@@ -172,6 +172,9 @@ static int json_create_item(cJSON *j, Transport *t)
     GET_OPTION_STRING(j, t, addr);
     GET_OPTION_TYPE(j, t, port, Number);
     GET_OPTION_BOOL(j, t, server);
+    GET_OPTION_BOOL(j, t, reuseaddr);
+    GET_OPTION_TYPE(j, t, so_rcvbuf, Number);
+    GET_OPTION_TYPE(j, t, so_sndbuf, Number);
 
     return 0;
 }
