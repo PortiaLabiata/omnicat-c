@@ -62,6 +62,7 @@ int main(int argc, char **argv)
     int num_transports = json_validate(&json_state, json);
     if (num_transports < 0)
     {
+        fprintf(stderr, "Invalid config\n");
         ret = 1;
         goto cleanup_json;
     }
@@ -81,6 +82,7 @@ int main(int argc, char **argv)
 
     if (json_init(&json_state, json, transports) < 0)
     {
+        fprintf(stderr, "Failed to create transports\n");
         ret = 1;
         goto cleanup_transports;
     }

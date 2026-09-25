@@ -9,9 +9,8 @@
         {
             "name": "t2",
             "kind": "udp",
-            "addr": "127.0.0.1",
             "port": 25000,
-            "server": false,
+            "server": true,
             "to": ["t1"]
         }
     ]

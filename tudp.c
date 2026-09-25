@@ -40,6 +40,7 @@ int transport_create_udp(TransportUDP *s, TransportCommon *c, Options *o)
     {
         addr.sin_port = 0;
         s->peer_addr.sin_port = htons(o->port);
+        s->peer_addr.sin_family = AF_INET;
         s->connected = true;
         if (inet_pton(AF_INET, o->addr, &addr.sin_addr) != 1)
         {

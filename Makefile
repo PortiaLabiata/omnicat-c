@@ -10,7 +10,8 @@ else
 			  -Wextra \
 			  -Wpedantic \
 			  -Og \
-			  -Wno-missing-braces
+			  -Wno-missing-braces \
+			  -g
 	LDFLAGS := -static 
 endif
 LD := $(CC)
