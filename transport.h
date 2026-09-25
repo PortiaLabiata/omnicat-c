@@ -30,20 +30,7 @@ typedef struct {
     TransportKind kind;
 } Transport;
 
-typedef enum {
-    SELECT_READ     = 1,
-    SELECT_WRITE    = 2,
-    SELECT_ERR      = 4,
-    SELEC_MAX       = 8
-} TransportSelectBitmask;
-
-typedef struct {
-    Transport *t;
-    int bitmask; 
-} TransportSelect;
-
 int transport_init(Transport *t);
-int transport_select(TransportSelect *t, int n, int tout_ms);
 int transport_read(Transport *t, uint8_t *buf, unsigned int size);
 int transport_write(Transport *t, uint8_t *buf, unsigned int size);
 void transport_deinit(Transport *t);

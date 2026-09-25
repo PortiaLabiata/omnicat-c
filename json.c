@@ -76,11 +76,54 @@ static TransportKind str2kind(const char *s)
     {
         return TRANSPORT_KIND_STDIO;
     }
+    else if (streq(s, "udp"))
+    {
+        return TRANSPORT_KIND_UDP;
+    }
     else 
     {
         return TRANSPORT_KIND_SIZE;
     }
 }
+
+#define GET_OPTION_STRING(j, t, name) \
+    cJSON *name = cJSON_GetObjectItemCaseSensitive(j, #name);  \
+    if (name)                                                   \
+    {                                                           \
+        if (!cJSON_IsString(name))                              \
+        {                                                       \
+            fprintf(stderr, "Failed to create transport %s: items have invalid type\n", \
+                    name_value);                                \
+            return -1;                                          \
+        }                                                       \
+        strcpy(t->options.name, cJSON_GetStringValue(name));    \
+    }
+
+#define GET_OPTION_TYPE(j, t, name, type) \
+    cJSON *name = cJSON_GetObjectItemCaseSensitive(j, #name);  \
+    if (name)                                                   \
+    {                                                           \
+        if (!cJSON_Is##type(name))                              \
+        {                                                       \
+            fprintf(stderr, "Failed to create transport %s: items have invalid type\n", \
+                    name_value);                                \
+            return -1;                                          \
+        }                                                       \
+        t->options.name = cJSON_Get##type##Value(name);         \
+    }
+
+#define GET_OPTION_BOOL(j, t, name) \
+    cJSON *name = cJSON_GetObjectItemCaseSensitive(j, #name);  \
+    if (name)                                                   \
+    {                                                           \
+        if (!cJSON_IsBool(name))                              \
+        {                                                       \
+            fprintf(stderr, "Failed to create transport %s: items have invalid type\n", \
+                    name_value);                                \
+            return -1;                                          \
+        }                                                       \
+        t->options.name = cJSON_IsTrue(name);                   \
+    }
 
 static int json_create_item(cJSON *j, Transport *t)
 {
@@ -125,6 +168,11 @@ static int json_create_item(cJSON *j, Transport *t)
         int rxbuf_size_value = cJSON_GetNumberValue(rxbuf_size);
         t->options.rxbuf_size = rxbuf_size_value;
     }
+
+    GET_OPTION_STRING(j, t, addr);
+    GET_OPTION_TYPE(j, t, port, Number);
+    GET_OPTION_BOOL(j, t, server);
+
     return 0;
 }
 

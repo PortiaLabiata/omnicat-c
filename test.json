@@ -8,15 +8,11 @@
 
         {
             "name": "t2",
-            "kind": "stdio",
-            "rxbuf_size": 1500,
-            "to": []
-        },
-
-        {
-            "name": "t3",
-            "kind": "stdio",
-            "to": []
+            "kind": "udp",
+            "addr": "127.0.0.1",
+            "port": 25000,
+            "server": false,
+            "to": ["t1"]
         }
     ]
 }

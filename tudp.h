@@ -4,6 +4,7 @@
 #include "common.h"
 #include "options.h"
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -11,6 +12,8 @@
 typedef struct {
     struct sockaddr_in peer_addr;
     socklen_t addr_len;
+    bool server;
+    bool connected;
 } TransportUDP;
 
 int transport_create_udp(TransportUDP *s, TransportCommon *c, Options *o);

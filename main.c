@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <malloc.h>
 #include <alloca.h>
+#include <poll.h>
 
 #include "cJSON/cJSON.h"
 #include "options.h"
@@ -44,7 +45,8 @@ int main(int argc, char **argv)
     {
         fprintf(stderr, "Failed to read file: %s\n",
                 strerror(errno));
-        return 1;
+        ret = 1;
+        goto cleanup;
     }
 
     cJSON *json = cJSON_Parse(buffer);
@@ -53,7 +55,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "Failed to parse config file at %s\n",
                 cJSON_GetErrorPtr());
         ret = 1;
-        goto cleanup;
+        goto cleanup_json;
     }
 
     JSONState json_state = {0};
@@ -61,7 +63,7 @@ int main(int argc, char **argv)
     if (num_transports < 0)
     {
         ret = 1;
-        goto cleanup;
+        goto cleanup_json;
     }
 
     Transport *transports = malloc(num_transports*sizeof(Transport));
@@ -69,7 +71,7 @@ int main(int argc, char **argv)
     {
         fprintf(stderr, "Failed to allocate transports, somehow\n");
         ret = 1;
-        goto cleanup;
+        goto cleanup_json;
     }
 
     for (int i = 0; i < num_transports; i++)
@@ -85,7 +87,11 @@ int main(int argc, char **argv)
 
     for (int i = 0; i < num_transports; i++)
     {
-        transport_init(&transports[i]);
+        if (transport_init(&transports[i]) < 0)
+        {
+            fprintf(stderr, "Failed to init transports\n");
+            return 1;
+        }
     }
 
     /*
@@ -102,46 +108,56 @@ int main(int argc, char **argv)
     }
     */
 
-    Transport **id_map = malloc(num_transports*sizeof(Transport*));
+    Transport **id_map = alloca(num_transports*sizeof(Transport*));
     for (int i = 0; i < num_transports; i++)
     {
         Transport *t = &transports[i];
         id_map[t->common.id] = t;
     }
 
-    TransportSelect *selects = malloc(num_transports);
+    struct pollfd *fds = alloca(sizeof(struct pollfd)*num_transports);
     for (int i = 0; i < num_transports; i++)
     {
-        selects[i].t = &transports[i];
-        selects[i].bitmask = 0;
+        fds[i].fd = transports[i].common.fdin;
+        fds[i].events = POLLIN;
+        fds[i].revents = 0;
     }
 
     while (1)
     {
-        if (transport_select(selects, num_transports, 1) > 0)
+        int ret = poll(fds, num_transports, 1);
+        if (ret < 0)
         {
-            for (int i = 0; i < num_transports; i++)
+            fprintf(stderr, "Select error: %s\n", strerror(errno));
+            continue;
+        }
+
+        if (ret == 0)
+        {
+            continue;
+        }
+
+        for (int i = 0; i < num_transports; i++)
+        {
+            if (fds[i].revents & POLLIN)
             {
-                TransportSelect *s = &selects[i];
-                if (s->bitmask & SELECT_READ)
+                fds[i].revents = 0;
+                Transport *t = &transports[i];
+
+                int read_bytes = transport_read(t, t->common.rxbuf, t->options.rxbuf_size);
+                if (read_bytes == 0)
                 {
-                    Transport *t = s->t;
+                    continue;
+                }
+                else if (read_bytes < 0)
+                {
+                    printf("Error reading transport \"%s\": %s\n",
+                            t->options.name, strerror(errno));
+                }
 
-                    int read_bytes = transport_read(t, t->common.rxbuf, t->options.rxbuf_size);
-                    if (read_bytes == 0)
-                    {
-                        continue;
-                    }
-                    else if (read_bytes < 0)
-                    {
-                        printf("Error reading transport \"%s\": %s\n",
-                               t->options.name, strerror(errno));
-                    }
-
-                    for (unsigned int j = 0; j < t->common.to_size; j++)
-                    {
-                        transport_write(id_map[t->common.to[j]], t->common.rxbuf, read_bytes);
-                    }
+                for (unsigned int j = 0; j < t->common.to_size; j++)
+                {
+                    transport_write(id_map[t->common.to[j]], t->common.rxbuf, read_bytes);
                 }
             }
         }
@@ -149,6 +165,8 @@ int main(int argc, char **argv)
 
 cleanup_transports:
     free(transports);
+cleanup_json:
+    cJSON_Delete(json);
 cleanup:
     free(buffer);
     return ret;
