@@ -80,6 +80,10 @@ static TransportKind str2kind(const char *s)
     {
         return TRANSPORT_KIND_UDP;
     }
+    else if (streq(s, "file"))
+    {
+        return TRANSPORT_KIND_FILE;
+    }
     else 
     {
         return TRANSPORT_KIND_SIZE;

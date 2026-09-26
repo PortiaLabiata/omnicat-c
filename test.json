@@ -18,6 +18,12 @@
             "rxbuf_size": 3000,
             "reuseaddr": true,
             "to": ["t1"]
+        },
+
+        {
+            "name": "test",
+            "kind": "stdio",
+            "to": []
         }
     ]
 }

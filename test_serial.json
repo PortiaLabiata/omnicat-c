@@ -1,0 +1,20 @@
+{
+    "configs": [
+        {
+            "name": "serial",
+            "kind": "file",
+            "addr": "/dev/ttyACM0",
+            "rxbuf_size": 3000,
+            "to": ["udp"]
+        },
+
+        {
+            "name": "udp",
+            "kind": "udp",
+            "port": 25000,
+            "server": true,
+            "rxbuf_size": 3000,
+            "to": ["serial"]
+        }
+    ]
+}

@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <alloca.h>
 #include <unistd.h>
-#include <sys/select.h>
 #include "transport.h"
 
 int transport_init(Transport *t)
@@ -21,6 +20,8 @@ int transport_init(Transport *t)
             return transport_create_stdio(&t->value.stdio, &t->common, &t->options);
         case TRANSPORT_KIND_UDP:
             return transport_create_udp(&t->value.udp, &t->common, &t->options);
+        case TRANSPORT_KIND_FILE:
+            return transport_create_file(&t->value.file, &t->common, &t->options);
         case TRANSPORT_KIND_SIZE:
             fprintf(stderr, "Invalid transport kind %d for transport %s\n",
                     (int)t->kind, t->options.name);
@@ -42,6 +43,9 @@ void transport_deinit(Transport *t)
             break;
         case TRANSPORT_KIND_UDP:
             transport_deinit_udp(&t->value.udp);
+            break;
+        case TRANSPORT_KIND_FILE:
+            transport_deinit_file(&t->value.file);
             break;
         case TRANSPORT_KIND_SIZE:
             fprintf(stderr, "Invalid transport kind %d for transport %s\n",

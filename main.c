@@ -38,7 +38,8 @@ int main(int argc, char **argv)
     {
         fprintf(stderr, "Failed to load file into memory: %s\n",
                 strerror(errno));
-        return 1;
+        ret = 1;
+        goto cleanup_file;
     }
 
     if (fread(buffer, 1, size, config_file) != size)
@@ -171,5 +172,7 @@ cleanup_json:
     cJSON_Delete(json);
 cleanup:
     free(buffer);
+cleanup_file:
+    fclose(config_file);
     return ret;
 }

@@ -6,10 +6,9 @@
 
 #include "tstdio.h"
 #include "tudp.h"
+#include "tfile.h"
 
 #include <stdint.h>
-
-#define TRANSPORT_SEL_CLEAR(t) (t.bitmask = 0)
 
 typedef enum {
     TRANSPORT_KIND_STDIO,
@@ -25,6 +24,7 @@ typedef struct {
     union {
         TransportStdio stdio;
         TransportUDP udp;
+        TransportFile file;
     } value;
 
     TransportKind kind;

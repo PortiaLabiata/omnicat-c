@@ -10,8 +10,7 @@ else
 			  -Wextra \
 			  -Wpedantic \
 			  -Og \
-			  -Wno-missing-braces \
-			  -g
+			  -Wno-missing-braces
 	LDFLAGS := -static 
 endif
 LD := $(CC)
@@ -20,6 +19,7 @@ SRCS := main.c \
 		transport.c \
 		tstdio.c \
 		tudp.c \
+		tfile.c \
 		cJSON/cJSON.c \
 		json.c \
 		options.c
