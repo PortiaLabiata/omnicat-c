@@ -86,7 +86,7 @@ static TransportKind str2kind(const char *s)
     }
     else if (streq(s, "serial"))
     {
-        return TRANSPORt_KIND_SERIAL;
+        return TRANSPORT_KIND_SERIAL;
     }
     else 
     {
