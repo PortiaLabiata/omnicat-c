@@ -22,6 +22,8 @@ int transport_init(Transport *t)
             return transport_create_udp(&t->value.udp, &t->common, &t->options);
         case TRANSPORT_KIND_FILE:
             return transport_create_file(&t->value.file, &t->common, &t->options);
+        case TRANSPORT_KIND_SERIAL:
+            return transport_create_serial(&t->value.serial, &t->common, &t->options);
         case TRANSPORT_KIND_SIZE:
             fprintf(stderr, "Invalid transport kind %d for transport %s\n",
                     (int)t->kind, t->options.name);
@@ -33,9 +35,6 @@ int transport_init(Transport *t)
 
 void transport_deinit(Transport *t)
 {
-    close(t->common.fdin);
-    close(t->common.fdout);
-    free(t->common.rxbuf);
     switch (t->kind)
     {
         case TRANSPORT_KIND_STDIO:
@@ -47,6 +46,9 @@ void transport_deinit(Transport *t)
         case TRANSPORT_KIND_FILE:
             transport_deinit_file(&t->value.file);
             break;
+        case TRANSPORT_KIND_SERIAL:
+            transport_deinit_serial(&t->value.serial, &t->common);
+            break;
         case TRANSPORT_KIND_SIZE:
             fprintf(stderr, "Invalid transport kind %d for transport %s\n",
                     (int)t->kind, t->options.name);
@@ -54,6 +56,8 @@ void transport_deinit(Transport *t)
         default:
             break;
     }
+    close(t->common.fdin);
+    free(t->common.rxbuf);
 }
 
 int transport_read(Transport *t, uint8_t *buf, unsigned int size)

@@ -84,6 +84,10 @@ static TransportKind str2kind(const char *s)
     {
         return TRANSPORT_KIND_FILE;
     }
+    else if (streq(s, "serial"))
+    {
+        return TRANSPORt_KIND_SERIAL;
+    }
     else 
     {
         return TRANSPORT_KIND_SIZE;
@@ -103,17 +107,17 @@ static TransportKind str2kind(const char *s)
         strcpy(t->options.name, cJSON_GetStringValue(name));    \
     }
 
-#define GET_OPTION_TYPE(j, t, name, type) \
+#define GET_OPTION_NUMBER(j, t, name) \
     cJSON *name = cJSON_GetObjectItemCaseSensitive(j, #name);  \
     if (name)                                                   \
     {                                                           \
-        if (!cJSON_Is##type(name))                              \
+        if (!cJSON_IsNumber(name))                              \
         {                                                       \
             fprintf(stderr, "Failed to create transport %s: items have invalid type\n", \
                     name_value);                                \
             return -1;                                          \
         }                                                       \
-        t->options.name = cJSON_Get##type##Value(name);         \
+        t->options.name = cJSON_GetNumberValue(name);         \
     }
 
 #define GET_OPTION_BOOL(j, t, name) \
@@ -174,11 +178,18 @@ static int json_create_item(cJSON *j, Transport *t)
     }
 
     GET_OPTION_STRING(j, t, addr);
-    GET_OPTION_TYPE(j, t, port, Number);
+    GET_OPTION_NUMBER(j, t, port);
     GET_OPTION_BOOL(j, t, server);
     GET_OPTION_BOOL(j, t, reuseaddr);
-    GET_OPTION_TYPE(j, t, so_rcvbuf, Number);
-    GET_OPTION_TYPE(j, t, so_sndbuf, Number);
+    GET_OPTION_NUMBER(j, t, so_rcvbuf);
+    GET_OPTION_NUMBER(j, t, so_sndbuf);
+
+    GET_OPTION_NUMBER(j, t, baud_rate);
+    GET_OPTION_STRING(j, t, parity);
+    GET_OPTION_NUMBER(j, t, stop_bits);
+    GET_OPTION_BOOL(j, t, echo);
+    GET_OPTION_BOOL(j, t, raw);
+    GET_OPTION_BOOL(j, t, canon);
 
     return 0;
 }

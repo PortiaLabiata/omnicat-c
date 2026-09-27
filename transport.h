@@ -7,6 +7,7 @@
 #include "tstdio.h"
 #include "tudp.h"
 #include "tfile.h"
+#include "tserial.h"
 
 #include <stdint.h>
 
@@ -14,6 +15,7 @@ typedef enum {
     TRANSPORT_KIND_STDIO,
     TRANSPORT_KIND_UDP,
     TRANSPORT_KIND_FILE,
+    TRANSPORT_KIND_SERIAL,
     TRANSPORT_KIND_SIZE
 } TransportKind;
 
@@ -25,6 +27,7 @@ typedef struct {
         TransportStdio stdio;
         TransportUDP udp;
         TransportFile file;
+        TransportSerial serial;
     } value;
 
     TransportKind kind;

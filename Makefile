@@ -20,6 +20,7 @@ SRCS := main.c \
 		tstdio.c \
 		tudp.c \
 		tfile.c \
+		tserial.c \
 		cJSON/cJSON.c \
 		json.c \
 		options.c
