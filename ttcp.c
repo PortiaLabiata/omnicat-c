@@ -113,7 +113,7 @@ int transport_read_tcp(TransportTCP *s, TransportCommon *c, uint8_t *buf, unsign
                         strerror(errno));
                 return -1;
             }
-            s->peerfd = ret;
+            c->fdin = c->fdout = ret;
             s->connected = true;
             return 0;
         }
@@ -126,7 +126,7 @@ int transport_read_tcp(TransportTCP *s, TransportCommon *c, uint8_t *buf, unsign
     }
     else 
     {
-        return read(s->peerfd, buf, size);
+        return read(c->fdin, buf, size);
     }
 }
 
@@ -149,10 +149,9 @@ int transport_write_tcp(TransportTCP *s, TransportCommon *c, uint8_t *buf, unsig
                 return -1;
             }
             s->connected = true;
-            s->peerfd = ret;
         }
     }
-    return write(s->peerfd, buf, size);
+    return write(c->fdin, buf, size);
 }
 
 void transport_deinit_tcp(TransportTCP *s, TransportCommon *c)

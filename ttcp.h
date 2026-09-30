@@ -11,7 +11,6 @@ typedef struct {
     bool connected;
     struct sockaddr_in peer_addr;
     socklen_t peer_size;
-    int peerfd;
 } TransportTCP;
 
 int transport_create_tcp(TransportTCP *s, TransportCommon *c, Options *o);

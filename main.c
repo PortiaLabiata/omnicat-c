@@ -148,6 +148,12 @@ int main(int argc, char **argv)
                 Transport *t = &transports[i];
 
                 int read_bytes = transport_read(t, t->common.rxbuf, t->options.rxbuf_size);
+                
+                if (t->kind == TRANSPORT_KIND_TCP)
+                {
+                    fds[i].fd = t->common.fdin;
+                }
+
                 if (read_bytes == 0)
                 {
                     continue;
