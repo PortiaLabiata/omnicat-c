@@ -28,9 +28,12 @@ SRCS := main.c \
 OBJS := $(SRCS:.c=.o)
 TARGET := omnicat
 
-.PHONY: all clean
+.PHONY: all clean install
 
 all: $(TARGET)
+
+install: $(TARGET)
+	cp $(TARGET) /usr/bin
 
 $(TARGET): $(OBJS)
 	$(LD) $(OBJS) $(LDFLAGS) -o $(TARGET)
@@ -41,3 +44,4 @@ $(TARGET): $(OBJS)
 clean:
 	$(RM) $(OBJS)
 	$(RM) $(TARGET)
+

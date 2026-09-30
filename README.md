@@ -1,0 +1,49 @@
+# omnicat
+
+omnicat is a simple utility akin to socat, but supporting multiple endpoints instead of two. It currently only works on Linux, but Windows support is planned as well and it is being developed with possible cross-platform compatibility in mind.
+
+## Obtaining
+
+To obtain omnicat, simply clone this repository with command:
+
+```sh
+    git clone --recurse-submodules https://github.com/PortiaLabiata/omnicat-c.git
+```
+
+It doesn't have external dependencies other than ![cJSON][https://github.com/davegamble/cjson]. To build and install this software, simply run 
+
+```sh
+    make
+    make install
+```
+
+## Usage
+
+Configuration is done in a single JSON file. This program is ran as follows:
+
+```sh
+    omnicat config.json
+```
+
+Configuration file should have this kind of structure:
+
+```json
+    {
+        "configs": [
+            { config-1 },
+            { config-2 },
+            ...
+            { config-3 }
+        ]
+    }
+```
+
+where configs are configurations for endpoints. Currently, theese types of endpoints are supported:
+
+ - Stdio ("stdio")
+ - UDP ("udp")
+ - TCP ("tcp")
+ - File ("file")
+ - Serial port ("serial")
+
+Endpoint type should be specified in "kind" field of config object. Mandatory fields are also "name" (a human-readable name by which endpoint will be identified) and "to", which is a list of destination endpoints' names. Such a structure allows building relatively robust endpoints' nets.
