@@ -21,6 +21,7 @@ SRCS := main.c \
 		tudp.c \
 		tfile.c \
 		tserial.c \
+		ttcp.c \
 		cJSON/cJSON.c \
 		json.c \
 		options.c

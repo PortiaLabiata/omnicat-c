@@ -39,7 +39,8 @@ int transport_create_udp(TransportUDP *s, TransportCommon *c, Options *o)
         s->connected = true;
         if (inet_pton(AF_INET, o->addr, &s->peer_addr.sin_addr) != 1)
         {
-            fprintf(stderr, "Failed to parse hardcoded address, somehow\n");
+            fprintf(stderr, "Failed to parse address %s\n",
+                    o->addr);
             return -1;
         }
     }

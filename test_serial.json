@@ -2,7 +2,7 @@
     "configs": [
         {
             "name": "serial",
-            "kind": "file",
+            "kind": "serial",
             "addr": "/dev/ttyACM0",
             "rxbuf_size": 3000,
             "to": ["udp"]

@@ -24,6 +24,8 @@ int transport_init(Transport *t)
             return transport_create_file(&t->value.file, &t->common, &t->options);
         case TRANSPORT_KIND_SERIAL:
             return transport_create_serial(&t->value.serial, &t->common, &t->options);
+        case TRANSPORT_KIND_TCP:
+            return transport_create_tcp(&t->value.tcp, &t->common, &t->options);
         case TRANSPORT_KIND_SIZE:
             fprintf(stderr, "Invalid transport kind %d for transport %s\n",
                     (int)t->kind, t->options.name);
@@ -49,6 +51,9 @@ void transport_deinit(Transport *t)
         case TRANSPORT_KIND_SERIAL:
             transport_deinit_serial(&t->value.serial, &t->common);
             break;
+        case TRANSPORT_KIND_TCP:
+            transport_deinit_tcp(&t->value.tcp, &t->common);
+            break;
         case TRANSPORT_KIND_SIZE:
             fprintf(stderr, "Invalid transport kind %d for transport %s\n",
                     (int)t->kind, t->options.name);
@@ -66,9 +71,12 @@ int transport_read(Transport *t, uint8_t *buf, unsigned int size)
     {
     case TRANSPORT_KIND_STDIO:
     case TRANSPORT_KIND_FILE:
+    case TRANSPORT_KIND_SERIAL:
         return read(t->common.fdin, buf, size); 
     case TRANSPORT_KIND_UDP:
         return transport_read_udp(&t->value.udp, &t->common, buf, size);
+    case TRANSPORT_KIND_TCP:
+        return transport_read_tcp(&t->value.tcp, &t->common, buf, size);
     default:
         return 1;
     }
@@ -80,9 +88,12 @@ int transport_write(Transport *t, uint8_t *buf, unsigned int size)
     {
     case TRANSPORT_KIND_STDIO:
     case TRANSPORT_KIND_FILE:
+    case TRANSPORT_KIND_SERIAL:
         return write(t->common.fdin, buf, size); 
     case TRANSPORT_KIND_UDP:
         return transport_write_udp(&t->value.udp, &t->common, buf, size);
+    case TRANSPORT_KIND_TCP:
+        return transport_write_tcp(&t->value.tcp, &t->common, buf, size);
     default:
         return 1;
     }
