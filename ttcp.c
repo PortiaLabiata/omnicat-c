@@ -26,15 +26,11 @@ int transport_create_tcp(TransportTCP *s, TransportCommon *c, Options *o)
     addr.sin_family = AF_INET;
     s->connected = false;
 
+    s->peer_size = sizeof(s->peer_addr);
+
     if (o->server)
     {
         addr.sin_port = htons(o->port);
-        if (listen(fd, 1) == -1)
-        {
-            fprintf(stderr, "Failed to set socket to listen mode: %s\n",
-                    strerror(errno));
-            return -1;
-        }
 
         if (inet_pton(AF_INET, o->addr, &addr.sin_addr) != 1)
         {
@@ -46,10 +42,21 @@ int transport_create_tcp(TransportTCP *s, TransportCommon *c, Options *o)
     else
     {
         s->peer_addr.sin_port = htons(o->port);
+        s->peer_addr.sin_family = AF_INET;
         if (inet_pton(AF_INET, o->addr, &s->peer_addr.sin_addr) != 1)
         {
             fprintf(stderr, "Failed to parse address %s\n",
                     o->addr);
+            return -1;
+        }
+    }
+
+    if (o->reuseaddr)
+    {
+        int opt = 1;
+        if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+        {
+            fprintf(stderr, "Failed to set SO_REUSEADDR\n");
             return -1;
         }
     }
@@ -61,12 +68,12 @@ int transport_create_tcp(TransportTCP *s, TransportCommon *c, Options *o)
         return -1;
     }
 
-    if (o->reuseaddr)
+    if (o->server)
     {
-        int opt = 1;
-        if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+        if (listen(fd, 1) == -1)
         {
-            fprintf(stderr, "Failed to set SO_REUSEADDR\n");
+            fprintf(stderr, "Failed to set socket to listen mode: %s\n",
+                    strerror(errno));
             return -1;
         }
     }
@@ -106,6 +113,8 @@ int transport_read_tcp(TransportTCP *s, TransportCommon *c, uint8_t *buf, unsign
                         strerror(errno));
                 return -1;
             }
+            s->peerfd = ret;
+            s->connected = true;
             return 0;
         }
         else
@@ -117,7 +126,7 @@ int transport_read_tcp(TransportTCP *s, TransportCommon *c, uint8_t *buf, unsign
     }
     else 
     {
-        return read(c->fdin, buf, size);
+        return read(s->peerfd, buf, size);
     }
 }
 
@@ -139,10 +148,11 @@ int transport_write_tcp(TransportTCP *s, TransportCommon *c, uint8_t *buf, unsig
                         strerror(errno));
                 return -1;
             }
-
+            s->connected = true;
+            s->peerfd = ret;
         }
     }
-    return write(c->fdin, buf, size);
+    return write(s->peerfd, buf, size);
 }
 
 void transport_deinit_tcp(TransportTCP *s, TransportCommon *c)

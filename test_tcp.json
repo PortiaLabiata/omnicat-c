@@ -1,0 +1,18 @@
+{
+    "configs": [
+        {
+            "name": "input",
+            "kind": "tcp",
+            "server": true,
+            "addr": "127.0.0.1",
+            "port": 25000,
+            "to": ["output"]
+        },
+
+        {
+            "name": "output",
+            "kind": "stdio",
+            "to": ["input"]
+        }
+    ]
+}

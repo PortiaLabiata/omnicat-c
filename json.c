@@ -88,6 +88,10 @@ static TransportKind str2kind(const char *s)
     {
         return TRANSPORT_KIND_SERIAL;
     }
+    else if (streq(s, "tcp"))
+    {
+        return TRANSPORT_KIND_TCP;
+    }
     else 
     {
         return TRANSPORT_KIND_SIZE;
