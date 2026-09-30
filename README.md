@@ -33,7 +33,7 @@ Configuration file should have this kind of structure:
             { config-1 },
             { config-2 },
             ...
-            { config-3 }
+            { config-n }
         ]
     }
 ```
@@ -46,4 +46,12 @@ where configs are configurations for endpoints. Currently, theese types of endpo
  - File ("file")
  - Serial port ("serial")
 
-Endpoint type should be specified in "kind" field of config object. Mandatory fields are also "name" (a human-readable name by which endpoint will be identified) and "to", which is a list of destination endpoints' names. Such a structure allows building relatively robust endpoints' nets.
+Endpoint type should be specified in "kind" field of config object. Mandatory fields are also "name" (a human-readable name by which endpoint will be identified) and "to", which is a list of destination endpoints' names. Such a structure allows building relatively robust endpoints' nets. It is also possible to specify internal buffer size (to account for MTU i. e.) through parameter "rxbuf_size".
+
+Some endpoint types require additional parameters, like:
+
+ - UDP: "addr", "server", "port", "reuseaddr", "so_rcvbuf", "so_sndbuf"
+ - TCP: like UDP
+ - Serial: "addr" (path to file), "echo", "canon", "raw" (for now, more will be added later, theese are just options, that I needed most)
+ - File: "addr"
+
