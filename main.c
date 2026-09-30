@@ -9,6 +9,7 @@
 #include "options.h"
 #include "transport.h"
 #include "json.h"
+#include "version.h"
 
 int main(int argc, char **argv)
 {
@@ -19,6 +20,15 @@ int main(int argc, char **argv)
     {
         fprintf(stderr, "Invalid number of arguments: file name required\n");
         return 1;
+    }
+
+    if (strcmp(argv[1], "-v") == 0)
+    {
+        printf("omnicat v%d.%d.%d\n",
+               VERSION_MAJOR,
+               VERSION_MINOR,
+               VERSION_PATCH);
+        return 0;
     }
 
     FILE *config_file = fopen(argv[1], "r");
