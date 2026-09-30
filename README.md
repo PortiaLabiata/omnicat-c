@@ -55,3 +55,6 @@ Some endpoint types require additional parameters, like:
  - Serial: "addr" (path to file), "echo", "canon", "raw" (for now, more will be added later, theese are just options, that I needed most)
  - File: "addr"
 
+# Licensing
+
+This code is distributed under the MIT License, see "LICENSE.md".
