@@ -1,6 +1,6 @@
 # omnicat
 
-omnicat is a simple utility akin to socat, but supporting multiple endpoints instead of two. It currently only works on Linux, but Windows support is planned as well and it is being developed with possible cross-platform compatibility in mind.
+omnicat is a simple utility akin to socat, but supporting multiple endpoints instead of two. It currently works on Linux and Windows with the help of Cygwin.
 
 ## Obtaining
 
@@ -10,7 +10,7 @@ To obtain omnicat, simply clone this repository with command:
     git clone --recurse-submodules https://github.com/PortiaLabiata/omnicat-c.git
 ```
 
-It doesn't have external dependencies other than ![cJSON][https://github.com/davegamble/cjson]. To build and install this software, simply run 
+It doesn't have external dependencies other than [cJSON](https://github.com/davegamble/cjson). To build and install this software, simply run 
 
 ```sh
     make
