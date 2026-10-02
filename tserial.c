@@ -36,10 +36,8 @@ int transport_create_serial(TransportSerial *s, TransportCommon *c, Options *o)
     }
 
     ptr += strlen(COM_PREFIX);
-    char *num = alloca(strlen(ptr));
-    strcpy(num, ptr);
-
-    sprintf(o->addr, "%s%s", CYGWIN_PREFIX, num);
+    unsigned int sernum = atoi(ptr);
+    sprintf(o->addr, "%s%u", CYGWIN_PREFIX, sernum + 1);
 #endif
 
     int fd = open(o->addr, O_RDWR);
