@@ -1,18 +1,12 @@
-ifeq ($(OS),Windows_NT)
-	CC := cl
-	RM := rd /q
-	CFLAGS := /W4
-	LDFLAGS := 
-else
-	CC := clang
-	RM := rm
-	CFLAGS := -Wall \
-			  -Wextra \
-			  -Wpedantic \
-			  -Og \
-			  -Wno-missing-braces
-	LDFLAGS := -static 
-endif
+CC := cc
+RM := rm
+CFLAGS += -Wall \
+			-Wextra \
+			-Wpedantic \
+			-Og \
+			-Wno-missing-braces
+LDFLAGS := -static 
+
 LD := $(CC)
 
 SRCS := main.c \

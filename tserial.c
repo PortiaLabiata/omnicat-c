@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <termios.h>
+#include <alloca.h>
 #include "tserial.h"
 
 int br2speed(int baud_rate)
@@ -22,6 +23,25 @@ int br2speed(int baud_rate)
 
 int transport_create_serial(TransportSerial *s, TransportCommon *c, Options *o)
 {
+#ifdef __CYGWIN__
+    static const char *COM_PREFIX = "COM";
+    static const char *CYGWIN_PREFIX = "/dev/ttyS";
+
+    char *ptr = strstr(o->addr, COM_PREFIX);
+    if (!ptr || ptr != o->addr)
+    {
+        fprintf(stderr, "Failed to open serial port: invalid name %s\n",
+                o->addr);
+        return -1;
+    }
+
+    ptr += strlen(COM_PREFIX);
+    char *num = alloca(strlen(ptr));
+    strcpy(num, ptr);
+
+    sprintf(o->addr, "%s%s", CYGWIN_PREFIX, num);
+#endif
+
     int fd = open(o->addr, O_RDWR);
     if (fd < 0)
     {
